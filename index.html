@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rat in a Maze</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: linear-gradient(135deg, #4e54c8, #8f94fb); /* Purple gradient */
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            justify-content: center;
+            width: 100vw;
+            height: 100vh;
+            font-family: 'Courier New', Courier, monospace; /* Consistent font family */
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Text shadow for depth */
+           
+        }
+        
+
+        h1 {
+            font-size: 50px;
+            color: white;
+            margin-bottom: 20px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        #maze-container {
+            border: 10px solid black;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            width: max-content;
+            height: max-content;
+            border-radius: 10px;
+        }
+
+        .row {
+            display: flex;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            background-color: white;
+        }
+
+        .wall {
+            background-color: black;
+        }
+
+        #rat {
+            position: absolute;
+            z-index: 1;
+        }
+
+        #food {
+            position: absolute;
+        }
+
+        select {
+            width: 150px;
+            border-radius: 20px;
+            border: none;
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 10px 20px;
+        }
+
+        button {
+            width: 200px;
+            height: 50px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-family: 'Courier New', Courier, monospace;
+            margin-bottom: 20px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        button:active {
+            background-color: #1e7e34;
+        }
+
+        .path-line {
+            position: absolute;
+            background-color: red;
+            z-index: 0;
+        }
+
+        .correct-line {
+            background-color: green;
+        }
+
+        .horizontal-line {
+            height: 2px;
+            width: 50px;
+        }
+
+        .vertical-line {
+            width: 2px;
+            height: 50px;
+        }
+
+        .junction {
+            width: 8px;
+            height: 8px;
+            background-color: red;
+            position: absolute;
+            z-index: 0;
+            border-radius: 50%;
+            /* Make it round for a smoother transition */
+        }
+
+        .correct-junction {
+            background-color: green;
+        }
+
+        /* Sidebar styles */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            /* Hidden initially */
+            width: 300px;
+            height: 100vh;
+            background-color: #28a745;
+            color: white;
+            padding: 20px;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+            transition: right 0.5s ease;
+            font-family: 'Courier New', Courier, monospace;
+            z-index: 2;
+        }
+
+        #sidebar.active {
+            right: 0;
+            /* Slide in when active */
+        }
+
+        #sidebar h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        #sidebar p {
+            font-size: 18px;
+            line-height: 1.5;
+        }
+
+        #close-sidebar {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Hamburger Icon */
+        #hamburger {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            font-size: 30px;
+            color: white;
+            cursor: pointer;
+            z-index: 3;
+        }
+
+        /* Add the following CSS for cloud styling */
+
+        #complexity-cloud {
+            position: fixed;
+            top: 20%;
+            right: 20px;
+            width: 250px;
+            height: 150px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            z-index: 2;
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .cloud-text {
+            font-family: 'Courier New', Courier, monospace;
+            padding: 20px;
+        }
+
+        #complexity-cloud h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        #complexity-cloud p {
+            font-size: 18px;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body onload="createMaze()">
+    <h1>Rat in a Maze</h1>
+    <select id="levelselect">
+        <option value="1">Level 1</option>
+        <option value="2">Level 2</option>
+        <option value="3">Level 3</option>
+    </select>
+
+    <button onclick="startSimulation()">Start Simulation</button>
+
+    <div id="maze-container">
+        <img src="rat.png" id="rat" width="50px" height="50px" alt="rat">
+        <img src="food.png" id="food" alt="food" width="50px" height="50px">
+    </div>
+
+
+
+    <script>
+        let level1 = [
+            [1, 0, 1, 0],
+            [1, 1, 1, 1],
+            [1, 0, 1, 0],
+            [1, 0, 1, 1]
+        ];
+
+        let level2 = [
+            [1, 1, 1, 0, 1, 0],
+            [1, 0, 1, 1, 1, 1],
+            [0, 0, 1, 0, 0, 0],
+            [1, 0, 1, 1, 1, 1],
+            [1, 0, 1, 0, 1, 0],
+            [1, 1, 1, 0, 1, 1]
+        ];
+
+        let level3 = [
+            [1, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+            [1, 0, 0, 1, 0, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1, 0, 1],
+            [1, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+            [1, 1, 1, 0, 1, 0, 1, 1, 0, 1],
+            [1, 0, 0, 0, 1, 0, 0, 1, 0, 1],
+            [1, 0, 1, 1, 1, 0, 1, 1, 1, 1],
+            [1, 1, 1, 0, 0, 0, 1, 0, 0, 1]
+        ];
+
+        let mazearray = level1;
+        let maze = document.getElementById("maze-container");
+        let rat = document.getElementById("rat");
+        let food = document.getElementById("food");
+
+        let Level = document.getElementById("levelselect");
+        Level.addEventListener("change", function () {
+            let level = Level.value;
+            if (level == 1) {
+                mazearray = level1;
+            } else if (level == 2) {
+                mazearray = level2;
+            } else if (level == 3) {
+                mazearray = level3;
+            }
+            resetMaze();
+            createMaze();
+            
+            // Update complexity stats for the new level
+            updateComplexityStats();  
+        });
+        
+
+        function resetMaze() {
+            maze.innerHTML = `
+                <img src="rat.png" id="rat" width="50px" height="50px" alt="rat">
+                <img src="food.png" alt="food" width="50px" height="50px" id="food">`;
+            rat = document.getElementById("rat");
+            food = document.getElementById("food");
+        }
+
+        function createMaze() {
+            for (let i = 0; i < mazearray.length; i++) {
+                let row = document.createElement("div");
+                row.classList.add("row");
+                for (let j = 0; j < mazearray[i].length; j++) {
+                    let cell = document.createElement("div");
+                    cell.classList.add("cell");
+
+                    if (mazearray[i][j] === 0) {
+                        cell.classList.add("wall");
+                    }
+
+                    row.appendChild(cell);
+                }
+                maze.appendChild(row);
+            }
+
+            setratposition(0, 0);
+            setfoodposition();
+        }
+
+        function setratposition(x, y) {
+            rat.style.top = x * 50 + "px";
+            rat.style.left = y * 50 + "px";
+        }
+
+        function setfoodposition() {
+            let x = mazearray.length - 1;
+            let y = mazearray[0].length - 1;
+            food.style.top = x * 50 + "px";
+            food.style.left = y * 50 + "px";
+        }
+
+        function startSimulation() {
+            let visited = Array(mazearray.length).fill(false).map(() => Array(mazearray[0].length).fill(false));
+            let ratX = 0, ratY = 0;
+            let foodX = mazearray.length - 1, foodY = mazearray[0].length - 1;
+
+            async function explore(x, y, prevX = null, prevY = null) {
+                if (x < 0 || y < 0 || x >= mazearray.length || y >= mazearray[0].length || mazearray[x][y] === 0 || visited[x][y]) {
+                    return false;
+                }
+
+                visited[x][y] = true;
+                setratposition(x, y);
+
+                // Draw a path line between the previous and current positions
+                if (prevX !== null && prevY !== null) {
+                    drawPathLine(prevX, prevY, x, y, false);  // Initially draw red for all paths
+
+                    // If there's a direction change, draw a junction
+                    if ((prevX !== x && prevY !== y) && prevX !== null && prevY !== null) {
+                        drawJunction(x, y, false);
+                    }
+                }
+
+                if (x === foodX && y === foodY) {
+                    setTimeout(() => {
+                        alert("Destination reached!");
+                    }, 500);
+
+                    // Highlight the correct path in green
+                    if (prevX !== null && prevY !== null) {
+                        drawPathLine(prevX, prevY, x, y, true);  // Change to green on correct path
+                    }
+                    return true;
+                }
+
+                // Delay for movement
+                await new Promise(resolve => setTimeout(resolve, 600));
+
+                // Explore in all directions
+                if (await explore(x + 1, y, x, y) || await explore(x, y + 1, x, y) || await explore(x - 1, y, x, y) || await explore(x, y - 1, x, y)) {
+                    // Mark the correct path as green
+                    if (prevX !== null && prevY !== null) {
+                        drawPathLine(prevX, prevY, x, y, true);
+
+                        // Add a green junction if the direction changes
+                        if ((prevX !== x && prevY !== y)) {
+                            drawJunction(x, y, true);
+                        }
+                    }
+                    return true;
+                }
+
+                return false;
+            }
+
+            explore(ratX, ratY);
+        }
+
+        // Function to draw path lines
+        function drawPathLine(x1, y1, x2, y2, isCorrect) {
+            let line = document.createElement("div");
+            line.classList.add("path-line");
+
+            if (isCorrect) {
+                line.classList.add("correct-line");
+            }
+
+            if (x1 === x2) {
+                // Moving horizontally
+                line.classList.add("horizontal-line");
+                line.style.top = x1 * 50 + 24 + "px";  // Vertically center the line
+                line.style.left = Math.min(y1, y2) * 50 + 50 + "px";  // Between the cells
+            } else if (y1 === y2) {
+                // Moving vertically
+                line.classList.add("vertical-line");
+                line.style.top = Math.min(x1, x2) * 50 + 50 + "px";  // Between the cells
+                line.style.left = y1 * 50 + 24 + "px";  // Horizontally center the line
+            }
+
+            maze.appendChild(line);
+        }
+
+        // Function to draw junctions (where direction changes)
+        function drawJunction(x, y, isCorrect) {
+            let junction = document.createElement("div");
+            junction.classList.add("junction");
+
+            if (isCorrect) {
+                junction.classList.add("correct-junction");
+            }
+
+            // Position junction at the center of the cell where direction changes
+            junction.style.top = x * 50 + 21 + "px";
+            junction.style.left = y * 50 + 21 + "px";
+
+            maze.appendChild(junction);
+        }
+
+        function updateComplexityStats() {
+            let level = Level.value;
+        
+            let timeComplexity = "O()";
+            let spaceComplexity ="O()";
+        
+            if (level == 1) {
+                timeComplexity = "O(n)";
+                spaceComplexity = "O(n)";
+            } else if (level == 2) {
+                timeComplexity = "O(n^2)";
+                spaceComplexity = "O(n)";
+            } else if (level == 3) {
+                timeComplexity = "O(n^2)";
+                spaceComplexity = "O(n^2)";
+            }
+        
+            // Update sidebar
+            document.getElementById("time-complexity").innerText = "Time Complexity: " + timeComplexity;
+            document.getElementById("space-complexity").innerText = "Space Complexity: " + spaceComplexity;
+        
+            // Update cloud
+            document.getElementById("cloud-time-complexity").innerText = "Time Complexity: " + timeComplexity;
+            document.getElementById("cloud-space-complexity").innerText = "Space Complexity: " + spaceComplexity;
+        }
+        function ratReachedDestination() {
+            alert("Destination reached!");
+            showSidebar();  // Show the sidebar when the rat reaches the cheese
+            updateComplexityStats(); // Update the stats in the sidebar and cloud
+        }
+
+
+    </script>
+    <!-- Add this above the closing </body> tag -->
+
+    <!-- Cloud for complexity display -->
+    <div id="complexity-cloud">
+        <div class="cloud-text">
+            <h2>Complexity</h2>
+            <p id="cloud-time-complexity"><b>Time Complexity: O(n^2)</b></p>
+            <p id="cloud-space-complexity"><b>Space Complexity: O(n^2)</b></p>
+        </div>
+    </div>
+
+
+</body>
+
+</html>
