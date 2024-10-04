@@ -217,6 +217,65 @@
             font-size: 18px;
             margin: 0;
         }
+
+         /* Show Description button */
+         #show-description-btn {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            padding: 10px 30px;
+            background: linear-gradient(135deg, #4e54c8, #8f94fb); /* Orange gradient */
+            color: white;
+            border: none;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* 3D shadow */
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 18px;
+            z-index: 5;
+            transition: all 0.3s ease;
+        }
+
+        #show-description-btn:hover {
+            background: linear-gradient(135deg,  #8f94fb, #4e54c8); /* Reverse gradient */
+            transform: scale(1.05); /* Scale up on hover */
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); /* Enhance shadow on hover */
+        }
+
+        #show-description-btn:active {
+            background: linear-gradient(135deg, #4e54c8, #8f94fb); /* Darken gradient */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* Reduce shadow on click */
+            transform: scale(0.98); /* Scale down on click */
+        }
+
+        
+        #description-container {
+            display: none;
+            position: fixed;
+            top: 60px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 300px;
+            height: 80vh;  /*Limit height to prevent overflow */
+            overflow-y: auto;  /* Add scrolling for overflow content */
+            z-index: 6;
+        }
+        
+        #description-container h2, #description-container h3 {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        #description-container p {
+            margin-bottom: 10px;
+        }
+        pre {
+            white-space: pre-wrap;  /* Wrap long lines */
+            word-wrap: break-word;  /* Break words if necessary */
+        }
+        
     </style>
 </head>
 
@@ -234,10 +293,69 @@
         <img src="rat.png" id="rat" width="50px" height="50px" alt="rat">
         <img src="food.png" id="food" alt="food" width="50px" height="50px">
     </div>
+    <!-- Show Description button -->
+    <button id="show-description-btn" onclick="toggleDescription()">Show Description</button>
+
+    <!-- Project Description container -->
+    <div id="description-container">
+        <h2>Project Description</h2>
+        <p>
+            This is a "Rat in a Maze" simulation where a rat must find its way to the cheese.
+            The maze can be generated in three different levels of complexity, each with its own time and space complexity.
+            The rat will use backtracking to find the correct path through the maze.
+        </p>
+    
+        <h3>Time and Space Complexity:</h3>
+        <p>
+            <strong>Time Complexity:</strong> O(2^(m*n))<br>
+            The time complexity is exponential as the algorithm checks every possible path in the worst case, where `m` is the number of rows and `n` is the number of columns in the maze.
+        </p>
+        <p>
+            <strong>Space Complexity:</strong> O(m*n)<br>
+            The space complexity is proportional to the size of the maze, as the algorithm stores the visited cells and recursive call stack.
+        </p>
+    
+        <h3>Pseudocode for Backtracking:</h3>
+        <pre>
+        function solveMaze(maze, x, y, solution):
+            if (x, y) is the destination:
+                return true
+            if (x, y) is a valid move:
+                mark (x, y) as part of solution
+                if solveMaze(maze, x+1, y, solution) is true:
+                    return true
+                if solveMaze(maze, x, y+1, solution) is true:
+                    return true
+                if solveMaze(maze, x-1, y, solution) is true:
+                    return true
+                if solveMaze(maze, x, y-1, solution) is true:
+                    return true
+                unmark (x, y) as part of solution (backtrack)
+                return false
+            return false
+        </pre>
+    
+        <h3>Other Examples of Backtracking Algorithms:</h3>
+        <ul>
+            <li><strong>N-Queens Problem:</strong> Placing N queens on an N×N chessboard such that no two queens threaten each other.</li>
+            <li><strong>Sudoku Solver:</strong> Filling a partially completed Sudoku board in such a way that each row, column, and 3x3 subgrid contains all digits from 1 to 9.</li>
+            <li><strong>Knights Tour Problem:</strong> Finding a sequence of moves for a knight on a chessboard such that it visits every square exactly once.</li>
+            <li><strong>Subset Sum Problem:</strong> Determining if there exists a subset of a given set whose sum is equal to a specified value.</li>
+        </ul>
+    </div>
+    
 
 
 
     <script>
+        function toggleDescription() {
+            var description = document.getElementById("description-container");
+            if (description.style.display === "none" || description.style.display === "") {
+                description.style.display = "block";
+            } else {
+                description.style.display = "none";
+            }
+        }
         let level1 = [
             [1, 0, 1, 0],
             [1, 1, 1, 1],
